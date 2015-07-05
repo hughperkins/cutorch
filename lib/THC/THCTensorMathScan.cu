@@ -12,11 +12,11 @@
 #include <thrust/reduce.h>
 #include <thrust/inner_product.h>
 
-/* Perform an inclusive scan along an outer dimension of a tensor.
+/* Perform an inclusive scan aint64 an outer dimension of a tensor.
  *
  * - num_orows is the size of the flattened outer dimensions;
  * - num_irows is the size of the flattened inner dimensions;
- * - row_size is the size of the dimension along which to compute the variance;
+ * - row_size is the size of the dimension aint64 which to compute the variance;
  *
  * The dimensions to the outside and inside of the specified dimension are considered as flattened.
  * Thread blocks with the same blockIdx.y process an "outer row" (i.e. an element of the flattened
@@ -46,7 +46,7 @@ __global__ void THCudaTensor_kernel_scanOuterDim(float *tgt_, float *src_,
 }
 
 template<class BinaryOp>
-__host__ void THCudaTensor_scanOuterDim(THCState *state, THCudaTensor *tgt, THCudaTensor *src, long dimension,
+__host__ void THCudaTensor_scanOuterDim(THCState *state, THCudaTensor *tgt, THCudaTensor *src, int64 dimension,
                                         float init, BinaryOp binary_op)
 {
   unsigned ndim = THCudaTensor_nDimension(state, src);
@@ -75,7 +75,7 @@ __host__ void THCudaTensor_scanOuterDim(THCState *state, THCudaTensor *tgt, THCu
 }
 
 
-/* Perform an inclusive scan along the innermost dimension of a tensor.
+/* Perform an inclusive scan aint64 the innermost dimension of a tensor.
  *
  * - num_rows is the size of the flattened outer dimensions;
  * - row_size is the size of the innermost dimension;
@@ -181,7 +181,7 @@ __host__ void THCudaTensor_scanInnermostDim(THCState *state, THCudaTensor *tgt, 
 }
 
 template<class BinaryFunction>
-void THCudaTensor_scanDim(THCState *state, THCudaTensor *self_, THCudaTensor *src, long dimension, float init, BinaryFunction binary_op)
+void THCudaTensor_scanDim(THCState *state, THCudaTensor *self_, THCudaTensor *src, int64 dimension, float init, BinaryFunction binary_op)
 {
   THCudaTensor_resizeAs(state, self_, src);
 
@@ -198,13 +198,13 @@ void THCudaTensor_scanDim(THCState *state, THCudaTensor *self_, THCudaTensor *sr
   THCudaTensor_freeCopyTo(state, self, self_);
 }
 
-void THCudaTensor_cumsum(THCState *state, THCudaTensor *self, THCudaTensor *src, long dimension)
+void THCudaTensor_cumsum(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dimension)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self, src));
   return THCudaTensor_scanDim(state, self, src, dimension, 0.0f, thrust::plus<float>());
 }
 
-void THCudaTensor_cumprod(THCState *state, THCudaTensor *self, THCudaTensor *src, long dimension)
+void THCudaTensor_cumprod(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dimension)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self, src));
   return THCudaTensor_scanDim(state, self, src, dimension, 1.0f, thrust::multiplies<float>());

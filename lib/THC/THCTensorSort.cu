@@ -13,7 +13,7 @@ getSortSliceLinearIndex() {
 }
 
 // Returns 2^(ceil(lg(n)) from Stanford bit twiddling hacks
-unsigned long nextHighestPowerOf2(unsigned long n) {
+uint64 nextHighestPowerOf2(uint64 n) {
   n--;
   n |= n >> 1;
   n |= n >> 2;
@@ -176,14 +176,14 @@ bool THCudaTensor_sortImpl(THCState* state,
                            THCudaTensor* indices,
                            THCudaTensor* input,
                            int dim, bool dir) {
-  long inElements = THCudaTensor_nElement(state, input);
+  int64 inElements = THCudaTensor_nElement(state, input);
 
-  long sliceSize = THCudaTensor_size(state, input, dim);
-  long sliceStride = THCudaTensor_stride(state, input, dim);
-  long slices = inElements / sliceSize;
+  int64 sliceSize = THCudaTensor_size(state, input, dim);
+  int64 sliceStride = THCudaTensor_stride(state, input, dim);
+  int64 slices = inElements / sliceSize;
 
-  long outSize = THCudaTensor_size(state, sorted, dim);
-  long outStride = THCudaTensor_stride(state, sorted, dim);
+  int64 outSize = THCudaTensor_size(state, sorted, dim);
+  int64 outStride = THCudaTensor_stride(state, sorted, dim);
 
   if (THCudaTensor_nDimension(state, input) > MAX_CUTORCH_DIMS) {
     // Too many dimensions
@@ -198,7 +198,7 @@ bool THCudaTensor_sortImpl(THCState* state,
   // The amount of shared memory and block size is based on
   // 2^ceil(lg(n)); we choose that sorting implementation for a given
   // size.
-  long ceilPowerOf2 = nextHighestPowerOf2(sliceSize);
+  int64 ceilPowerOf2 = nextHighestPowerOf2(sliceSize);
 
   // Only handle 1-2048 at the moment
   if (ceilPowerOf2 > 2048) {
@@ -310,15 +310,15 @@ bool THCudaTensor_sortImpl(THCState* state,
   } else {
     // In order to get to the right offset for the slice we are
     // sorting, set `dim` size to 1 (the `dropDim` argument)
-    TensorInfo<unsigned long> sortedInfo(state, sorted, dim);
-    TensorInfo<unsigned long> indicesInfo(state, indices, dim);
-    TensorInfo<unsigned long> inputInfo(state, input, dim);
+    TensorInfo<uint64> sortedInfo(state, sorted, dim);
+    TensorInfo<uint64> indicesInfo(state, indices, dim);
+    TensorInfo<uint64> inputInfo(state, input, dim);
 
-    // long case is rare, just instantiate these versions
+    // int64 case is rare, just instantiate these versions
     if (inputInfo.isContiguous()) {
-      HANDLE_SORT_CASE(unsigned long, -2);
+      HANDLE_SORT_CASE(uint64, -2);
     } else {
-      HANDLE_SORT_CASE(unsigned long, -1);
+      HANDLE_SORT_CASE(uint64, -1);
     }
   }
 #undef HANDLE_CASE
@@ -333,29 +333,29 @@ bool THCudaTensor_sortImpl(THCState* state,
 // (sliceSize - 1) * sliceStride, we fill that slice from `0` to
 // `sliceSize - 1`.
 __global__ void
-THCudaTensor_fillSliceWithIndex(TensorInfo<unsigned long> out,
-                                long totalSlices,
-                                long sliceSize,
-                                long sliceStride) {
-  long slice = getLinearBlockId<long>();
+THCudaTensor_fillSliceWithIndex(TensorInfo<uint64> out,
+                                int64 totalSlices,
+                                int64 sliceSize,
+                                int64 sliceStride) {
+  int64 slice = getLinearBlockId<int64>();
 
   if (slice >= totalSlices) {
     return;
   }
 
-  const unsigned long offset =
-    IndexToOffset<unsigned long, -1>::get(slice, out);
+  const uint64 offset =
+    IndexToOffset<uint64, -1>::get(slice, out);
 
-  for (long i = threadIdx.x; i < sliceSize; i += blockDim.x) {
+  for (int64 i = threadIdx.x; i < sliceSize; i += blockDim.x) {
     // Torch indices are 1-based (hence the +1)
     out.data[offset + i * sliceStride] = (float) i + 1;
   }
 }
 
 bool canSortThrust(THCState* state, THCudaTensor* input, int dim) {
-  long totalElements = THCudaTensor_nElement(state, input);
-  long sliceSize = THCudaTensor_size(state, input, dim);
-  long numSlices = totalElements / sliceSize;
+  int64 totalElements = THCudaTensor_nElement(state, input);
+  int64 sliceSize = THCudaTensor_size(state, input, dim);
+  int64 numSlices = totalElements / sliceSize;
 
   // Only bother deferring to Thrust if the sort slice is contiguous,
   // the number of slices are small, and they are large
@@ -370,32 +370,32 @@ void THCudaTensor_sortImplThrust(THCState* state,
                                  THCudaTensor* input,
                                  int dim, bool dir) {
   // Fill the indices as values that Thrust can use for key/value sorting
-  long totalElements = THCudaTensor_nElement(state, input);
-  long sliceSize = THCudaTensor_size(state, input, dim);
-  long sliceStride = THCudaTensor_stride(state, input, dim);
-  long numSlices = totalElements / sliceSize;
+  int64 totalElements = THCudaTensor_nElement(state, input);
+  int64 sliceSize = THCudaTensor_size(state, input, dim);
+  int64 sliceStride = THCudaTensor_stride(state, input, dim);
+  int64 numSlices = totalElements / sliceSize;
 
   // Copy input to sorted, since we sort in place
   if (sorted != input) {
     THCudaTensor_copy(state, sorted, input);
   }
 
-  TensorInfo<unsigned long> sortedInfo(state, sorted, dim);
-  TensorInfo<unsigned long> indicesInfo(state, indices, dim);
+  TensorInfo<uint64> sortedInfo(state, sorted, dim);
+  TensorInfo<uint64> indicesInfo(state, indices, dim);
 
   dim3 grid;
   THC_getGridFromTiles(numSlices, grid);
 
-  THCudaTensor_fillSliceWithIndex<<<grid, min((long long)sliceSize, 1024LL),
+  THCudaTensor_fillSliceWithIndex<<<grid, min((int64)sliceSize, 1024LL),
                                     0, THCState_getCurrentStream(state)>>>(
     indicesInfo, numSlices, sliceSize, sliceStride);
   THCudaCheck(cudaGetLastError());
 
-  for (long slice = 0; slice < numSlices; ++slice) {
-    unsigned long sortedStart =
-      IndexToOffset<unsigned long, -1>::get(slice, sortedInfo);
-    unsigned long indicesStart =
-      IndexToOffset<unsigned long, -1>::get(slice, indicesInfo);
+  for (int64 slice = 0; slice < numSlices; ++slice) {
+    uint64 sortedStart =
+      IndexToOffset<uint64, -1>::get(slice, sortedInfo);
+    uint64 indicesStart =
+      IndexToOffset<uint64, -1>::get(slice, indicesInfo);
 
     thrust::device_ptr<float>
       sortedSliceStart(THCudaTensor_data(state, sorted) +

@@ -7,20 +7,20 @@ struct THCState;
 
 THC_API void THCudaTensor_conv2Dmv(struct THCState *state, THCudaTensor *output,
                                    float beta, THCudaTensor *input, THCudaTensor *kernel,
-                                   long srow, long scol, const char *type);
+                                   int64 srow, int64 scol, const char *type);
 THC_API void THCudaTensor_conv2Dmm(struct THCState *state, THCudaTensor *output,
                                    float beta, THCudaTensor *input, THCudaTensor *kernel,
-                                   long srow, long scol, const char *type);
+                                   int64 srow, int64 scol, const char *type);
 
 THC_API void THCudaTensor_conv2DRevger(struct THCState *state, THCudaTensor *output,
                                        float beta, float alpha, THCudaTensor *input,
-                                       THCudaTensor *kernel, long srow, long scol);
+                                       THCudaTensor *kernel, int64 srow, int64 scol);
 THC_API void THCudaTensor_conv2DRevgerm(struct THCState *state, THCudaTensor *output,
                                         float beta, float alpha, THCudaTensor *input,
-                                        THCudaTensor *kernel, long srow, long scol);
+                                        THCudaTensor *kernel, int64 srow, int64 scol);
 
 THC_API void THCudaTensor_conv2Dmap(struct THCState *state, THCudaTensor *output,
                                     THCudaTensor *input, THCudaTensor *kernel,
-                                    long stride_x, long stride_y, THCudaTensor *table, long fanin);
+                                    int64 stride_x, int64 stride_y, THCudaTensor *table, int64 fanin);
 
 #endif

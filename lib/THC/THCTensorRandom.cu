@@ -37,7 +37,7 @@ __host__ void destroyGenerator(Generator* gen)
 }
 
 /* Creates a new generator state given the seed. */
-__host__ void createGeneratorState(Generator* gen, unsigned long seed)
+__host__ void createGeneratorState(Generator* gen, uint64 seed)
 {
   if (curandMakeMTGP32Constants(mtgp32dc_params_fast_11213, gen->kernel_params) != CURAND_STATUS_SUCCESS)
   {
@@ -98,22 +98,22 @@ __host__ void THCRandom_setGenerator(THCState* state, int device)
 }
 
 /* Random seed */
-__host__ unsigned long THCRandom_seed(THCState* state)
+__host__ uint64 THCRandom_seed(THCState* state)
 {
-  unsigned long s = (unsigned long)time(0);
+  uint64 s = (uint64)time(0);
   THCRandom_manualSeed(state, s);
   return s;
 }
 
-__host__ unsigned long THCRandom_seedAll(THCState* state)
+__host__ uint64 THCRandom_seedAll(THCState* state)
 {
-  unsigned long s = (unsigned long)time(0);
+  uint64 s = (uint64)time(0);
   THCRandom_manualSeedAll(state, s);
   return s;
 }
 
 /* Manually set the seed */
-__host__ void THCRandom_manualSeed(THCState* state, unsigned long seed)
+__host__ void THCRandom_manualSeed(THCState* state, uint64 seed)
 {
   THCRNGState* rng_state = state->rngState;
   if (rng_state->current_gen == NULL)
@@ -125,7 +125,7 @@ __host__ void THCRandom_manualSeed(THCState* state, unsigned long seed)
   rng_state->current_gen->initf = 1;
 }
 
-__host__ void THCRandom_manualSeedAll(THCState* state, unsigned long seed)
+__host__ void THCRandom_manualSeedAll(THCState* state, uint64 seed)
 {
   THCRNGState* rng_state = state->rngState;
   int currentDevice;
@@ -140,7 +140,7 @@ __host__ void THCRandom_manualSeedAll(THCState* state, unsigned long seed)
 }
 
 /* Get the initial seed */
-__host__ unsigned long THCRandom_initialSeed(THCState* state)
+__host__ uint64 THCRandom_initialSeed(THCState* state)
 {
   return state->rngState->current_gen->initial_seed;
 }
@@ -149,7 +149,7 @@ __host__ void THCRandom_getRNGState(THCState* state, THByteTensor *rng_state)
 {
   // The RNG state comprises the MTPG32 states and the seed.
   static const size_t states_size = MAX_NUM_BLOCKS * sizeof(curandStateMtgp32);
-  static const size_t seed_size = sizeof(unsigned long);
+  static const size_t seed_size = sizeof(uint64);
   static const size_t total_size = states_size + seed_size;
   THByteTensor_resize1d(rng_state, total_size);
   THArgCheck(THByteTensor_nElement(rng_state) == total_size, 1, "RNG state is wrong size");
@@ -162,7 +162,7 @@ __host__ void THCRandom_getRNGState(THCState* state, THByteTensor *rng_state)
 __host__ void THCRandom_setRNGState(THCState* state, THByteTensor *rng_state)
 {
   static const size_t states_size = MAX_NUM_BLOCKS * sizeof(curandStateMtgp32);
-  static const size_t seed_size = sizeof(unsigned long);
+  static const size_t seed_size = sizeof(uint64);
   static const size_t total_size = states_size + seed_size;
   THArgCheck(THByteTensor_nElement(rng_state) == total_size, 1, "RNG state is wrong size");
   THArgCheck(THByteTensor_isContiguous(rng_state), 1, "RNG state must be contiguous");
@@ -231,7 +231,7 @@ THC_API void THCudaTensor_uniform(THCState* state, THCudaTensor *self_, double a
     THError("Random number generators have not been initialized.");
   }
   THCudaTensor *self = THCudaTensor_newContiguous(state, self_);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   float *data = THCudaTensor_data(state, self);
 
   generate_uniform<<<NUM_BLOCKS, BLOCK_SIZE, 0, THCState_getCurrentStream(state)>>>(
@@ -248,7 +248,7 @@ THC_API void THCudaTensor_bernoulli(THCState* state, THCudaTensor *self_, double
     THError("Random number generators have not been initialized.");
   }
   THCudaTensor *self = THCudaTensor_newContiguous(state, self_);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   float *data = THCudaTensor_data(state, self);
 
   generate_bernoulli<<<NUM_BLOCKS, BLOCK_SIZE, 0, THCState_getCurrentStream(state)>>>(
@@ -265,7 +265,7 @@ THC_API void THCudaTensor_normal(THCState* state, THCudaTensor *self_, double me
     THError("Random number generators have not been initialized.");
   }
   THCudaTensor *self = THCudaTensor_newContiguous(state, self_);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   float *data = THCudaTensor_data(state, self);
 
   generate_normal<<<NUM_BLOCKS, BLOCK_SIZE, 0, THCState_getCurrentStream(state)>>>(
@@ -282,7 +282,7 @@ THC_API void THCudaTensor_logNormal(THCState* state, THCudaTensor *self_, double
     THError("Random number generators have not been initialized.");
   }
   THCudaTensor *self = THCudaTensor_newContiguous(state, self_);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   float *data = THCudaTensor_data(state, self);
 
   generate_log_normal<<<NUM_BLOCKS, BLOCK_SIZE, 0, THCState_getCurrentStream(state)>>>(
@@ -299,7 +299,7 @@ THC_API void THCudaTensor_geometric(THCState* state, THCudaTensor *self_, double
     THError("Random number generators have not been initialized.");
   }
   THCudaTensor *self = THCudaTensor_newContiguous(state, self_);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   float *data = THCudaTensor_data(state, self);
 
   generate_geometric<<<NUM_BLOCKS, BLOCK_SIZE, 0, THCState_getCurrentStream(state)>>>(
@@ -316,7 +316,7 @@ THC_API void THCudaTensor_exponential(THCState* state, THCudaTensor *self_, doub
     THError("Random number generators have not been initialized.");
   }
   THCudaTensor *self = THCudaTensor_newContiguous(state, self_);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   float *data = THCudaTensor_data(state, self);
 
   generate_exponential<<<NUM_BLOCKS, BLOCK_SIZE, 0, THCState_getCurrentStream(state)>>>(
@@ -333,7 +333,7 @@ THC_API void THCudaTensor_cauchy(THCState* state, THCudaTensor *self_, double me
     THError("Random number generators have not been initialized.");
   }
   THCudaTensor *self = THCudaTensor_newContiguous(state, self_);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   float *data = THCudaTensor_data(state, self);
 
   generate_cauchy<<<NUM_BLOCKS, BLOCK_SIZE, 0, THCState_getCurrentStream(state)>>>(

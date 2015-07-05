@@ -97,12 +97,12 @@ TensorInfo<IndexType>::TensorInfo(THCState* state,
 
   // Now, to determine the other collapsible dims. These are the size/strides
   // of the previous inner non-collapsible dim we encounter.
-  long sizeInner = THCudaTensor_size(state, t, firstNonOneDim);
-  long strideInner = THCudaTensor_stride(state, t, firstNonOneDim);
+  int64 sizeInner = THCudaTensor_size(state, t, firstNonOneDim);
+  int64 strideInner = THCudaTensor_stride(state, t, firstNonOneDim);
 
   for (int i = firstNonOneDim - 1; i >= 0; --i) {
-    long sizeOuter = (i == reduceDim) ? 1 : THCudaTensor_size(state, t, i);
-    long strideOuter = THCudaTensor_stride(state, t, i);
+    int64 sizeOuter = (i == reduceDim) ? 1 : THCudaTensor_size(state, t, i);
+    int64 strideOuter = THCudaTensor_stride(state, t, i);
 
     // The next outermost dimension can be skipped if size 1
     if (sizeOuter == 1) {
@@ -135,8 +135,8 @@ TensorInfo<IndexType>::TensorInfo(THCState* state,
   strides[collapsedIndex] = THCudaTensor_stride(state, t, firstNonOneDim);
 
   for (int i = firstNonOneDim - 1; i >= 0; --i) {
-    long sizeOuter = (i == reduceDim) ? 1 : THCudaTensor_size(state, t, i);
-    long strideOuter = THCudaTensor_stride(state, t, i);
+    int64 sizeOuter = (i == reduceDim) ? 1 : THCudaTensor_size(state, t, i);
+    int64 strideOuter = THCudaTensor_stride(state, t, i);
 
     if (sizeOuter == 1) {
       // skip
@@ -276,7 +276,7 @@ __device__ T reduceBlock(T* smem,
 bool THC_canUse32BitIndexMath(THCState* state, THCudaTensor* t);
 
 // Produces a grid with at least one point per tile
-bool THC_getGridFromTiles(long gridTiles, dim3& grid);
+bool THC_getGridFromTiles(int64 gridTiles, dim3& grid);
 
 // Determines if the given tensor has overlapping data points (i.e.,
 // is there more than one index into the tensor that references the

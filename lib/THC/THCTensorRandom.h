@@ -8,7 +8,7 @@ typedef struct _Generator {
   struct curandStateMtgp32* gen_states;
   struct mtgp32_kernel_params *kernel_params;
   int initf;
-  unsigned long initial_seed;
+  uint64 initial_seed;
 } Generator;
 
 typedef struct THCRNGState {
@@ -23,11 +23,11 @@ struct THCState;
 THC_API void THCRandom_init(struct THCState *state, int num_devices, int current_device);
 THC_API void THCRandom_shutdown(struct THCState *state);
 THC_API void THCRandom_setGenerator(struct THCState *state, int device);
-THC_API unsigned long THCRandom_seed(struct THCState *state);
-THC_API unsigned long THCRandom_seedAll(struct THCState *state);
-THC_API void THCRandom_manualSeed(struct THCState *state, unsigned long the_seed_);
-THC_API void THCRandom_manualSeedAll(struct THCState *state, unsigned long the_seed_);
-THC_API unsigned long THCRandom_initialSeed(struct THCState *state);
+THC_API uint64 THCRandom_seed(struct THCState *state);
+THC_API uint64 THCRandom_seedAll(struct THCState *state);
+THC_API void THCRandom_manualSeed(struct THCState *state, uint64 the_seed_);
+THC_API void THCRandom_manualSeedAll(struct THCState *state, uint64 the_seed_);
+THC_API uint64 THCRandom_initialSeed(struct THCState *state);
 THC_API void THCRandom_getRNGState(struct THCState *state, THByteTensor *rng_state);
 THC_API void THCRandom_setRNGState(struct THCState *state, THByteTensor *rng_state);
 THC_API void THCudaTensor_geometric(struct THCState *state, THCudaTensor *self, double p);

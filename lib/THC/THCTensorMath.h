@@ -10,14 +10,14 @@ THC_API void THCudaTensor_zero(THCState *state, THCudaTensor *self);
 THC_API void THCudaTensor_zeros(THCState *state, THCudaTensor *r_, THLongStorage *size);
 THC_API void THCudaTensor_ones(THCState *state, THCudaTensor *r_, THLongStorage *size);
 THC_API void THCudaTensor_reshape(THCState *state, THCudaTensor *r_, THCudaTensor *t, THLongStorage *size);
-THC_API long THCudaTensor_numel(THCState *state, THCudaTensor *t);
+THC_API int64 THCudaTensor_numel(THCState *state, THCudaTensor *t);
 
 THC_API void THCudaTensor_add(THCState *state, THCudaTensor *self, THCudaTensor *src, float value);
 THC_API void THCudaTensor_mul(THCState *state, THCudaTensor *self, THCudaTensor *src, float value);
 THC_API void THCudaTensor_div(THCState *state, THCudaTensor *self, THCudaTensor *src, float value);
 
-THC_API void THCudaTensor_tril(THCState *state, THCudaTensor *self, THCudaTensor *src, long k);
-THC_API void THCudaTensor_triu(THCState *state, THCudaTensor *self, THCudaTensor *src, long k);
+THC_API void THCudaTensor_tril(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 k);
+THC_API void THCudaTensor_triu(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 k);
 
 THC_API void THCudaTensor_cadd(THCState *state, THCudaTensor *self, THCudaTensor *src1, float value, THCudaTensor *src2);
 THC_API void THCudaTensor_cmul(THCState *state, THCudaTensor *self, THCudaTensor *src1, THCudaTensor *src2);
@@ -33,12 +33,12 @@ THC_API float THCudaTensor_minall(THCState *state, THCudaTensor *self);
 THC_API float THCudaTensor_maxall(THCState *state, THCudaTensor *self);
 THC_API float THCudaTensor_sumall(THCState *state, THCudaTensor *self);
 THC_API float THCudaTensor_prodall(THCState *state, THCudaTensor *self);
-THC_API void THCudaTensor_min(THCState *state, THCudaTensor *values, THCudaTensor *indices, THCudaTensor *src, long dim);
-THC_API void THCudaTensor_max(THCState *state, THCudaTensor *values, THCudaTensor *indices, THCudaTensor *src, long dim);
-THC_API void THCudaTensor_sum(THCState *state, THCudaTensor *self, THCudaTensor *src, long dim);
-THC_API void THCudaTensor_prod(THCState *state, THCudaTensor *self, THCudaTensor *src, long dim);
-THC_API void THCudaTensor_cumsum(THCState *state, THCudaTensor *self, THCudaTensor *src, long dim);
-THC_API void THCudaTensor_cumprod(THCState *state, THCudaTensor *self, THCudaTensor *src, long dim);
+THC_API void THCudaTensor_min(THCState *state, THCudaTensor *values, THCudaTensor *indices, THCudaTensor *src, int64 dim);
+THC_API void THCudaTensor_max(THCState *state, THCudaTensor *values, THCudaTensor *indices, THCudaTensor *src, int64 dim);
+THC_API void THCudaTensor_sum(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dim);
+THC_API void THCudaTensor_prod(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dim);
+THC_API void THCudaTensor_cumsum(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dim);
+THC_API void THCudaTensor_cumprod(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dim);
 
 THC_API void THCudaTensor_addmv(THCState *state, THCudaTensor *self, float beta, THCudaTensor *t, float alpha, THCudaTensor *mat, THCudaTensor *vec);
 THC_API void THCudaTensor_addmm(THCState *state, THCudaTensor *self, float beta, THCudaTensor *t, float alpha, THCudaTensor *mat1, THCudaTensor *mat2);
@@ -96,14 +96,14 @@ THC_API void THCudaTensor_eqTensor(THCState *state, THCudaTensor *self_, THCudaT
 THC_API void THCudaTensor_neTensor(THCState *state, THCudaTensor *self_, THCudaTensor *src1, THCudaTensor *src2);
 
 THC_API float THCudaTensor_meanall(THCState *state, THCudaTensor *self);
-THC_API void  THCudaTensor_mean(THCState *state, THCudaTensor *self, THCudaTensor *src, long dim);
+THC_API void  THCudaTensor_mean(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dim);
 THC_API float THCudaTensor_varall(THCState *state, THCudaTensor *self);
-THC_API void  THCudaTensor_var(THCState *state, THCudaTensor *self, THCudaTensor *src, long dim, int flag);
+THC_API void  THCudaTensor_var(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dim, int flag);
 THC_API float THCudaTensor_stdall(THCState *state, THCudaTensor *self);
-THC_API void  THCudaTensor_std(THCState *state, THCudaTensor *self, THCudaTensor *src, long dim, int flag);
+THC_API void  THCudaTensor_std(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dim, int flag);
 THC_API float THCudaTensor_normall(THCState *state, THCudaTensor *self, float value);
-THC_API void  THCudaTensor_norm(THCState *state, THCudaTensor* self, THCudaTensor* src, float value, long dimension);
-THC_API void  THCudaTensor_renorm(THCState *state, THCudaTensor* self, THCudaTensor* src, float value, long dimension, float max_norm);
+THC_API void  THCudaTensor_norm(THCState *state, THCudaTensor* self, THCudaTensor* src, float value, int64 dimension);
+THC_API void  THCudaTensor_renorm(THCState *state, THCudaTensor* self, THCudaTensor* src, float value, int64 dimension, float max_norm);
 THC_API float THCudaTensor_dist(THCState *state, THCudaTensor *self, THCudaTensor *src, float value);
 
 THC_API void THCudaTensor_rand(THCState *state, THCudaTensor *r_, THLongStorage *size);
@@ -113,9 +113,9 @@ THC_API void THCudaTensor_indexCopy(THCState *state, THCudaTensor *res_, int dim
 THC_API void THCudaTensor_indexFill(THCState *state, THCudaTensor *tensor, int dim, THCudaTensor *index, float val);
 THC_API void THCudaTensor_indexSelect(THCState *state, THCudaTensor *tensor, THCudaTensor *src, int dim, THCudaTensor *index);
 
-THC_API void THCudaTensor_indexCopy_long(THCState *state, THCudaTensor *res_, int dim, THLongTensor *indices, THCudaTensor *src);
-THC_API void THCudaTensor_indexFill_long(THCState *state, THCudaTensor *tensor, int dim, THLongTensor *index, float val);
-THC_API void THCudaTensor_indexSelect_long(THCState *state, THCudaTensor *tensor, THCudaTensor *src, int dim, THLongTensor *index);
+THC_API void THCudaTensor_indexCopy_int64(THCState *state, THCudaTensor *res_, int dim, THLongTensor *indices, THCudaTensor *src);
+THC_API void THCudaTensor_indexFill_int64(THCState *state, THCudaTensor *tensor, int dim, THLongTensor *index, float val);
+THC_API void THCudaTensor_indexSelect_int64(THCState *state, THCudaTensor *tensor, THCudaTensor *src, int dim, THLongTensor *index);
 
 THC_API void THCudaTensor_maskedFill(THCState* state, THCudaTensor *tensor, THCudaTensor *mask, float value);
 THC_API void THCudaTensor_maskedCopy(THCState* state, THCudaTensor *tensor, THCudaTensor *mask, THCudaTensor *src);

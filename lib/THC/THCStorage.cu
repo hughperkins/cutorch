@@ -9,7 +9,7 @@ void THCudaStorage_fill(THCState *state, THCudaStorage *self, float value)
   thrust::fill(self_data, self_data+self->size, value);
 }
 
-void THCudaStorage_resize(THCState *state, THCudaStorage *self, long size)
+void THCudaStorage_resize(THCState *state, THCudaStorage *self, int64 size)
 {
   THArgCheck(size >= 0, 2, "invalid size");
 

@@ -96,7 +96,7 @@ inline dim3 getApplyBlock() {
   return dim3(THC_APPLY_THREADS_PER_BLOCK);
 }
 
-inline bool getApplyGrid(THCState* state, long totalElements, dim3& grid) {
+inline bool getApplyGrid(THCState* state, int64 totalElements, dim3& grid) {
   int curDevice = -1;
   cudaGetDevice(&curDevice);
 
@@ -110,8 +110,8 @@ inline bool getApplyGrid(THCState* state, long totalElements, dim3& grid) {
 
   // 16 warps per block * 4 per SM gives 64 warps per SM at maximum,
   // which seems to be a good sweetspot for latency hiding
-  grid = dim3(min((long long) THCCeilDiv(totalElements,
-                                         (long) THC_APPLY_THREADS_PER_BLOCK),
+  grid = dim3(min((int64) THCCeilDiv(totalElements,
+                                         (int64) THC_APPLY_THREADS_PER_BLOCK),
                   4LL * numSM));
   return true;
 }
@@ -121,7 +121,7 @@ bool THCudaTensor_pointwiseApply1(THCState* state,
                                   THCudaTensor* a,
                                   const Op& op,
                                   TensorArgType aType = ReadWrite) {
-  long totalElements = THCudaTensor_nElement(state, a);
+  int64 totalElements = THCudaTensor_nElement(state, a);
 
   if (THCudaTensor_nDimension(state, a) > MAX_CUTORCH_DIMS) {
     return false;
@@ -200,19 +200,19 @@ bool THCudaTensor_pointwiseApply1(THCState* state,
 
     HANDLE_A_CASE(unsigned int, aInfo.dims);
   } else {
-    TensorInfo<unsigned long> aInfo(state, a);
+    TensorInfo<uint64> aInfo(state, a);
 
     // For large tensors, we only compile the completely contiguous
     // version and the completely generic version, to reduce
     // compilation time.
     if (aInfo.isContiguous()) {
-      THCudaTensor_pointwiseApply1<Op, unsigned long, -2>
+      THCudaTensor_pointwiseApply1<Op, uint64, -2>
         <<<grid, block, 0, THCState_getCurrentStream(state)>>>(
-          aInfo, (unsigned long) totalElements, op);
+          aInfo, (uint64) totalElements, op);
     } else {
-      THCudaTensor_pointwiseApply1<Op, unsigned long, -1>
+      THCudaTensor_pointwiseApply1<Op, uint64, -1>
         <<<grid, block, 0, THCState_getCurrentStream(state)>>>(
-          aInfo, (unsigned long) totalElements, op);
+          aInfo, (uint64) totalElements, op);
     }
   }
 #undef HANDLE_CASE
@@ -237,7 +237,7 @@ bool THCudaTensor_pointwiseApply2(THCState* state,
                                   const Op& op,
                                   TensorArgType aType = ReadWrite,
                                   TensorArgType bType = ReadOnly) {
-  long totalElements = THCudaTensor_nElement(state, a);
+  int64 totalElements = THCudaTensor_nElement(state, a);
 
   if (totalElements != THCudaTensor_nElement(state, b)) {
     return false;
@@ -347,20 +347,20 @@ bool THCudaTensor_pointwiseApply2(THCState* state,
 
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims);
   } else {
-    TensorInfo<unsigned long> aInfo(state, a);
-    TensorInfo<unsigned long> bInfo(state, b);
+    TensorInfo<uint64> aInfo(state, a);
+    TensorInfo<uint64> bInfo(state, b);
 
     // For large tensors, we only compile the completely contiguous
     // version and the completely generic version, to reduce
     // compilation time.
     if (aInfo.isContiguous() && bInfo.isContiguous()) {
-      THCudaTensor_pointwiseApply2<Op, unsigned long, -2, -2>
+      THCudaTensor_pointwiseApply2<Op, uint64, -2, -2>
         <<<grid, block, 0, THCState_getCurrentStream(state)>>>(
-          aInfo, bInfo, (unsigned long) totalElements, op);
+          aInfo, bInfo, (uint64) totalElements, op);
     } else {
-      THCudaTensor_pointwiseApply2<Op, unsigned long, -1, -1>
+      THCudaTensor_pointwiseApply2<Op, uint64, -1, -1>
         <<<grid, block, 0, THCState_getCurrentStream(state)>>>(
-          aInfo, bInfo, (unsigned long) totalElements, op);
+          aInfo, bInfo, (uint64) totalElements, op);
     }
   }
 #undef HANDLE_CASE
@@ -397,7 +397,7 @@ bool THCudaTensor_pointwiseApply3(THCState* state,
                                   TensorArgType aType = ReadWrite,
                                   TensorArgType bType = ReadOnly,
                                   TensorArgType cType = ReadOnly) {
-  long totalElements = THCudaTensor_nElement(state, a);
+  int64 totalElements = THCudaTensor_nElement(state, a);
 
   if (totalElements != THCudaTensor_nElement(state, b) ||
       totalElements != THCudaTensor_nElement(state, c)) {
@@ -533,21 +533,21 @@ bool THCudaTensor_pointwiseApply3(THCState* state,
 
     HANDLE_A_CASE(unsigned int, aInfo.dims, bInfo.dims, cInfo.dims);
   } else {
-    TensorInfo<unsigned long> aInfo(state, a);
-    TensorInfo<unsigned long> bInfo(state, b);
-    TensorInfo<unsigned long> cInfo(state, c);
+    TensorInfo<uint64> aInfo(state, a);
+    TensorInfo<uint64> bInfo(state, b);
+    TensorInfo<uint64> cInfo(state, c);
 
     // For large tensors, we only compile the completely contiguous
     // version and the completely generic version, to reduce
     // compilation time.
     if (aInfo.isContiguous() && bInfo.isContiguous() && cInfo.isContiguous()) {
-      THCudaTensor_pointwiseApply3<Op, unsigned long, -2, -2, -2>
+      THCudaTensor_pointwiseApply3<Op, uint64, -2, -2, -2>
         <<<grid, block, 0, THCState_getCurrentStream(state)>>>(
-          aInfo, bInfo, cInfo, (unsigned long) totalElements, op);
+          aInfo, bInfo, cInfo, (uint64) totalElements, op);
     } else {
-      THCudaTensor_pointwiseApply3<Op, unsigned long, -1, -1, -1>
+      THCudaTensor_pointwiseApply3<Op, uint64, -1, -1, -1>
         <<<grid, block, 0, THCState_getCurrentStream(state)>>>(
-          aInfo, bInfo, cInfo, (unsigned long) totalElements, op);
+          aInfo, bInfo, cInfo, (uint64) totalElements, op);
     }
   }
 #undef HANDLE_CASE

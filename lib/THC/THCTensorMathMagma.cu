@@ -39,8 +39,8 @@ static inline int* th_magma_imalloc_pinned(size_t n)
 
 static void THCudaTensor_copyArray1d(THCState *state, THCudaTensor *self, float *src, int k)
 {
-  long size[1] = { k };
-  long stride[1] = { 1 };
+  int64 size[1] = { k };
+  int64 stride[1] = { 1 };
   THCudaTensor_rawResize(state, self, 1, size, stride);
   size_t len = k * sizeof(float);
   THCudaCheck(cudaMemcpy(self->storage->data + self->storageOffset, src, len, cudaMemcpyHostToDevice));
@@ -48,8 +48,8 @@ static void THCudaTensor_copyArray1d(THCState *state, THCudaTensor *self, float 
 
 static void THCudaTensor_copyArray2d(THCState *state, THCudaTensor *self, float *src, int m, int n)
 {
-  long size[2] = { m, n };
-  long stride[2] = { 1, m };
+  int64 size[2] = { m, n };
+  int64 stride[2] = { 1, m };
   THCudaTensor_rawResize(state, self, 2, size, stride);
   size_t len = m * n * sizeof(float);
   THCudaCheck(cudaMemcpy(self->storage->data + self->storageOffset, src, len, cudaMemcpyHostToDevice));
@@ -80,8 +80,8 @@ static THCudaTensor* THCudaTensor_newColumnMajor(THCState *state, THCudaTensor *
   else
     THCudaTensor_retain(state, self);
 
-  long size[2] = { src->size[0], src->size[1] };
-  long stride[2] = { 1, src->size[0] };
+  int64 size[2] = { src->size[0], src->size[1] };
+  int64 stride[2] = { 1, src->size[0] };
 
   THCudaTensor_rawResize(state, self, 2, size, stride);
   THCudaTensor_copy(state, self, src);

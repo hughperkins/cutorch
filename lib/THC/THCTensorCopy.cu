@@ -8,7 +8,7 @@ static inline int curGPU() {
 
 THC_API void
 THCudaTensor_copy(THCState* state, THCudaTensor* dst, THCudaTensor* src) {
-  long totalElements = THCudaTensor_nElement(state, dst);
+  int64 totalElements = THCudaTensor_nElement(state, dst);
 
   THArgCheck(totalElements == THCudaTensor_nElement(state, src), 2,
              "sizes do not match");

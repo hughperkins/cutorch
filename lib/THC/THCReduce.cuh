@@ -112,7 +112,7 @@ inline dim3 getNoncontigReduceBlock() {
   return dim3(THC_NONCONTIG_REDUCE_BLOCK_SIZE);
 }
 
-inline dim3 getContigReduceBlock(long numSlices, long reductionSize) {
+inline dim3 getContigReduceBlock(int64 numSlices, int64 reductionSize) {
   // If the number of slices is low but the reduction dimension size
   // is high, then we should increase block size for greater parallelism.
   // Aim for at least 32 warps per SM (assume 15 SMs; don't bother
@@ -130,18 +130,18 @@ inline dim3 getContigReduceBlock(long numSlices, long reductionSize) {
   }
 
   // Scale up block size based on the reduction dimension size
-  long warpsInReductionSize = THCCeilDiv(reductionSize, 32L);
+  int64 warpsInReductionSize = THCCeilDiv(reductionSize, 32LL);
   int numWarps =
-    warpsInReductionSize > (long) maxWarps ? maxWarps : (int) warpsInReductionSize;
+    warpsInReductionSize > (int64) maxWarps ? maxWarps : (int) warpsInReductionSize;
   return dim3(numWarps * 32);
 }
 
-inline bool getNoncontigReduceGrid(long elements, dim3& grid) {
+inline bool getNoncontigReduceGrid(int64 elements, dim3& grid) {
   // One output point per thread
-  return THC_getGridFromTiles(THCCeilDiv(elements, (long) THC_NONCONTIG_REDUCE_BLOCK_SIZE), grid);
+  return THC_getGridFromTiles(THCCeilDiv(elements, (int64) THC_NONCONTIG_REDUCE_BLOCK_SIZE), grid);
 }
 
-inline bool getContigReduceGrid(long elements, dim3& grid) {
+inline bool getContigReduceGrid(int64 elements, dim3& grid) {
   // One output point per block
   return THC_getGridFromTiles(elements, grid);
 }
@@ -156,11 +156,11 @@ bool THCudaTensor_reduceDim(THCState* state,
                             const ReduceOp& reduceOp,
                             float init,
                             int dim) {
-  long inElements = THCudaTensor_nElement(state, in);
+  int64 inElements = THCudaTensor_nElement(state, in);
 
-  long reductionSize = THCudaTensor_size(state, in, dim);
-  long reductionStride = THCudaTensor_stride(state, in, dim);
-  long outElements = inElements / reductionSize;
+  int64 reductionSize = THCudaTensor_size(state, in, dim);
+  int64 reductionStride = THCudaTensor_stride(state, in, dim);
+  int64 outElements = inElements / reductionSize;
 
   if (THCudaTensor_nDimension(state, out) > MAX_CUTORCH_DIMS ||
       THCudaTensor_nDimension(state, in) > MAX_CUTORCH_DIMS) {
@@ -272,16 +272,16 @@ bool THCudaTensor_reduceDim(THCState* state,
 
     HANDLE_OUT_CASE(unsigned int, outInfo.dims, inInfo.dims);
   } else {
-    TensorInfo<unsigned long> outInfo(state, out);
-    TensorInfo<unsigned long> inInfo(state, in, dim);
+    TensorInfo<uint64> outInfo(state, out);
+    TensorInfo<uint64> inInfo(state, in, dim);
 
     // For large tensors, we only compile the completely contiguous
     // version and the completely generic version, to reduce
     // compilation time.
     if (outInfo.isContiguous() && inInfo.isContiguous()) {
-      HANDLE_CASE(unsigned long, -2, -2);
+      HANDLE_CASE(uint64, -2, -2);
     } else {
-      HANDLE_CASE(unsigned long, -1, -1);
+      HANDLE_CASE(uint64, -1, -1);
     }
   }
 #undef HANDLE_CASE

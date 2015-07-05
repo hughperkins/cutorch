@@ -60,13 +60,13 @@ void THCudaTensor_maskedCopy(THCState* state,
                              THCudaTensor *tensor, THCudaTensor *mask, THCudaTensor *src)
 {
   THAssert(THCudaTensor_checkGPU(state, 3, tensor, src, mask));
-  long maskSize = THCudaTensor_nElement(state, mask);
-  long tensorSize = THCudaTensor_nElement(state, tensor);
-  long srcSize = THCudaTensor_nElement(state, src);
+  int64 maskSize = THCudaTensor_nElement(state, mask);
+  int64 tensorSize = THCudaTensor_nElement(state, tensor);
+  int64 srcSize = THCudaTensor_nElement(state, src);
 
   // Since we are performing a prefix sum of mask, it cannot exceed
   // the size allowed in consecutive integers in float32
-  THArgCheck(maskSize <= (long) FLOAT32_MAX_CONSECUTIVE_INT,
+  THArgCheck(maskSize <= (int64) FLOAT32_MAX_CONSECUTIVE_INT,
              3, "mask nElements exceeds single-precision float "
              "consecutive integer precision size (2^24)");
 
@@ -75,7 +75,7 @@ void THCudaTensor_maskedCopy(THCState* state,
              "mask and tensor must have the same number of elements");
 
   THCudaTensor* contigMask = THCudaTensor_newContiguous(state, mask);
-  long oneElements = (long) THCudaTensor_sumall(state, contigMask);
+  int64 oneElements = (int64) THCudaTensor_sumall(state, contigMask);
 
   // The number of `1` elements present in the mask must be <= the
   // number of elements available in `src`
@@ -136,13 +136,13 @@ void THCudaTensor_maskedSelect(THCState* state,
   // Since we are performing a prefix sum of mask, it cannot exceed
   // the size allowed in consecutive integers in float32
   THArgCheck(THCudaTensor_nElement(state, mask) <=
-             (long) FLOAT32_MAX_CONSECUTIVE_INT,
+             (int64) FLOAT32_MAX_CONSECUTIVE_INT,
              3, "mask nElements exceeds single-precision float "
              "consecutive integer precision size (2^24)");
 
   // Determine our output size
   THCudaTensor* contigMask = THCudaTensor_newContiguous(state, mask);
-  long totalElements = (long) THCudaTensor_sumall(state, contigMask);
+  int64 totalElements = (int64) THCudaTensor_sumall(state, contigMask);
 
   // This should be contiguous already, so no need to make it contig
   // for the apply kernel

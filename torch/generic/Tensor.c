@@ -414,7 +414,7 @@ static int torch_Tensor_(indexSelect)(lua_State *L)
   if (index)
     THTensor_(indexSelect)(state, tensor,src,dim,index);
   else
-    THTensor_(indexSelect_long)(state, tensor,src,dim,longIndex);
+    THTensor_(indexSelect_int64)(state, tensor,src,dim,longIndex);
 
   return 1;
 }
@@ -443,7 +443,7 @@ static int torch_Tensor_(indexCopy)(lua_State *L)
   if (index)
     THTensor_(indexCopy)(cutorch_getstate(L), tensor,dim,index,src);
   else
-    THTensor_(indexCopy_long)(cutorch_getstate(L), tensor,dim,longIndex,src);
+    THTensor_(indexCopy_int64)(cutorch_getstate(L), tensor,dim,longIndex,src);
 
   return 1;
 }
@@ -473,7 +473,7 @@ static int torch_Tensor_(indexFill)(lua_State *L)
   if (index)
     THTensor_(indexFill)(cutorch_getstate(L), tensor,dim,index,val);
   else
-    THTensor_(indexFill_long)(cutorch_getstate(L), tensor,dim,longIndex,val);
+    THTensor_(indexFill_int64)(cutorch_getstate(L), tensor,dim,longIndex,val);
 
   return 1;
 }
@@ -1067,9 +1067,9 @@ static int torch_Tensor_(write)(lua_State *L)
   THFile *file = luaT_checkudata(L, 2, "torch.File");
 
   THFile_writeIntScalar(file, tensor->nDimension);
-  THFile_writeLongRaw(file, tensor->size, tensor->nDimension);
-  THFile_writeLongRaw(file, tensor->stride, tensor->nDimension);
-  THFile_writeLongScalar(file, tensor->storageOffset+1); /* to respect Lua convention */
+  THFile_writeInt64Raw(file, tensor->size, tensor->nDimension);
+  THFile_writeInt64Raw(file, tensor->stride, tensor->nDimension);
+  THFile_writeInt64Scalar(file, tensor->storageOffset+1); /* to respect Lua convention */
 
   lua_getfield(L, 2, "writeObject"); /* the method */
   lua_pushvalue(L, 2); /* the file */
@@ -1095,9 +1095,9 @@ static int torch_Tensor_(read)(lua_State *L)
   tensor->nDimension = THFile_readIntScalar(file);
   tensor->size = THAlloc(sizeof(long)*tensor->nDimension);
   tensor->stride = THAlloc(sizeof(long)*tensor->nDimension);
-  THFile_readLongRaw(file, tensor->size, tensor->nDimension);
-  THFile_readLongRaw(file, tensor->stride, tensor->nDimension);
-  tensor->storageOffset = THFile_readLongScalar(file);
+  THFile_readInt64Raw(file, tensor->size, (long)tensor->nDimension);
+  THFile_readInt64Raw(file, tensor->stride, (long)tensor->nDimension);
+  tensor->storageOffset = THFile_readInt64Scalar(file);
   tensor->storageOffset--;  /* to respect Lua convention */
 
   lua_getfield(L, 2, "readObject"); /* the method */

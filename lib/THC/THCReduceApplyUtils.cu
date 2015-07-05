@@ -4,20 +4,20 @@
 #include <stdlib.h>
 
 // Maximum size per grid dimension that we assume (compute capability >= 2.0)
-#define MAX_GRID_SIZE 65535L
+#define MAX_GRID_SIZE 65535LL
 
 bool THC_canUse32BitIndexMath(THCState* state, THCudaTensor* t) {
-  long elements = THCudaTensor_nElement(state, t);
+  int64 elements = THCudaTensor_nElement(state, t);
   if (elements >= UINT_MAX) {
     return false;
   }
 
-  long offset = 0;
-  long linearId = elements - 1;
+  int64 offset = 0;
+  int64 linearId = elements - 1;
 
   for (int i = THCudaTensor_nDimension(state, t) - 1; i >= 0; --i) {
-    long curDimIndex = linearId % THCudaTensor_size(state, t, i);
-    long curDimOffset = curDimIndex * THCudaTensor_stride(state, t, i);
+    int64 curDimIndex = linearId % THCudaTensor_size(state, t, i);
+    int64 curDimOffset = curDimIndex * THCudaTensor_stride(state, t, i);
     offset += curDimOffset;
     linearId /= THCudaTensor_size(state, t, i);
   }
@@ -29,14 +29,14 @@ bool THC_canUse32BitIndexMath(THCState* state, THCudaTensor* t) {
   return true;
 }
 
-bool THC_getGridFromTiles(long gridTiles, dim3& grid) {
+bool THC_getGridFromTiles(int64 gridTiles, dim3& grid) {
   if (gridTiles > MAX_GRID_SIZE * MAX_GRID_SIZE * MAX_GRID_SIZE) {
     return false;
   }
 
-  long gridX = gridTiles > MAX_GRID_SIZE ? MAX_GRID_SIZE : gridTiles;
-  long gridY = 1;
-  long gridZ = 1;
+  int64 gridX = gridTiles > MAX_GRID_SIZE ? MAX_GRID_SIZE : gridTiles;
+  int64 gridY = 1;
+  int64 gridZ = 1;
 
   if (gridTiles > MAX_GRID_SIZE) {
     gridTiles = THCCeilDiv(gridTiles, MAX_GRID_SIZE);
@@ -55,8 +55,8 @@ bool THC_getGridFromTiles(long gridTiles, dim3& grid) {
 namespace {
 
 struct SizeAndStride {
-  long size;
-  long stride;
+  int64 size;
+  int64 stride;
 };
 
 int compareSizeAndStride(const void* a, const void* b) {
@@ -89,7 +89,7 @@ bool THC_overlappingIndices(THCState* state, THCudaTensor* t) {
   int dims = THCudaTensor_nDimension(state, t);
   int nonSize1Dims = 0;
   for (int i = 0; i < dims; ++i) {
-    long size = THCudaTensor_size(state, t, i);
+    int64 size = THCudaTensor_size(state, t, i);
     if (size > 1) {
       info[nonSize1Dims].size = size;
       info[nonSize1Dims].stride = THCudaTensor_stride(state, t, i);

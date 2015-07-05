@@ -257,7 +257,7 @@ void THCudaTensor_baddbmm(THCState *state, THCudaTensor *result, float beta, THC
 
   bool transpose_result;
   char transpose_batch1, transpose_batch2;
-  long lda, ldb, ldc;
+  int64 lda, ldb, ldc;
   THCudaTensor *result_, *batch1_, *batch2_;
   if (result->stride[1] == 1)
   {
@@ -326,7 +326,7 @@ void THCudaTensor_baddbmm(THCState *state, THCudaTensor *result, float beta, THC
   }
 
   // Compute pointers to matrices in each batch.
-  long num_batches = result_->size[0];
+  int64 num_batches = result_->size[0];
   size_t matrices_size = num_batches * sizeof(float*);
   const float **matrices1 = (const float **)THAlloc(matrices_size);
   const float **matrices2 = (const float **)THAlloc(matrices_size);

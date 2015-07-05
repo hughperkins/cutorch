@@ -166,7 +166,7 @@ float THCudaTensor_meanall(THCState *state, THCudaTensor *self)
 }
 
 void
-THCudaTensor_mean(THCState *state, THCudaTensor *self, THCudaTensor *src, long dim)
+THCudaTensor_mean(THCState *state, THCudaTensor *self, THCudaTensor *src, int64 dim)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self, src));
   THCudaTensor_sum(state, self, src, dim);
@@ -189,7 +189,7 @@ float THCudaTensor_varall(THCState *state, THCudaTensor *self)
 {
   THAssert(THCudaTensor_checkGPU(state, 1, self));
   self = THCudaTensor_newContiguous(state, self);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   thrust::device_ptr<float> self_data(THCudaTensor_data(state, self));
 
   float mean = THCudaTensor_meanall(state, self);
@@ -228,11 +228,11 @@ __forceinline__ __device__ float THCudaTensor_computeVar(float sum, float sum2, 
     return sum2;
 }
 
-/* Compute the variance (or standard deviation) along an outer dimension of a tensor.
+/* Compute the variance (or standard deviation) aint64 an outer dimension of a tensor.
  *
  * - num_orows is the size of the flattened outer dimensions;
  * - num_irows is the size of the flattened inner dimensions;
- * - row_size is the size of the dimension along which to compute the variance;
+ * - row_size is the size of the dimension aint64 which to compute the variance;
  * - if flag is set, normalize by `row_size` instead of `row_size - 1`
  * - if apply_sqrt is set, compute the standard deviation instead of variance
  *
@@ -263,7 +263,7 @@ __global__ void THCudaTensor_kernel_varOuterDim(float *tgt, float *src_, unsigne
 }
 
 template<bool apply_sqrt>
-__host__ void THCudaTensor_varOuterDim(THCState *state, THCudaTensor *tgt, THCudaTensor *src, long dimension, int flag)
+__host__ void THCudaTensor_varOuterDim(THCState *state, THCudaTensor *tgt, THCudaTensor *src, int64 dimension, int flag)
 {
   unsigned ndim = THCudaTensor_nDimension(state, src);
   // Treat all outer dimensions (i.e. dim < dimension) as one.
@@ -359,7 +359,7 @@ __host__ void THCudaTensor_varInnermostDim(THCState *state, THCudaTensor *tgt, T
   }
   unsigned row_size = THCudaTensor_size(state, src, ndim - 1);
 
-  // From limited testing, 16x32 seemed a good compromise for handling both long and short dimensions.
+  // From limited testing, 16x32 seemed a good compromise for handling both int64 and short dimensions.
   dim3 threads(16, 32);
   dim3 grid(min(1024, THCCeilDiv(num_rows, threads.y)));
 
@@ -376,7 +376,7 @@ __host__ void THCudaTensor_varInnermostDim(THCState *state, THCudaTensor *tgt, T
   }
 }
 
-void THCudaTensor_var(THCState *state, THCudaTensor *self_, THCudaTensor *src, long dimension, int flag)
+void THCudaTensor_var(THCState *state, THCudaTensor *self_, THCudaTensor *src, int64 dimension, int flag)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self_, src));
   THLongStorage *dim = THCudaTensor_newSizeOf(state, src);
@@ -397,7 +397,7 @@ void THCudaTensor_var(THCState *state, THCudaTensor *self_, THCudaTensor *src, l
   THCudaTensor_freeCopyTo(state, self, self_);
 }
 
-void THCudaTensor_std(THCState *state, THCudaTensor *self_, THCudaTensor *src, long dimension, int flag)
+void THCudaTensor_std(THCState *state, THCudaTensor *self_, THCudaTensor *src, int64 dimension, int flag)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self_, src));
   THLongStorage *dim = THCudaTensor_newSizeOf(state, src);
@@ -442,7 +442,7 @@ float THCudaTensor_normall(THCState *state, THCudaTensor *self, float value)
 {
   THAssert(THCudaTensor_checkGPU(state, 1, self));
   self = THCudaTensor_newContiguous(state, self);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   thrust::device_ptr<float> self_data(THCudaTensor_data(state, self));
 
   float result;
@@ -457,7 +457,7 @@ float THCudaTensor_normall(THCState *state, THCudaTensor *self, float value)
   return result;
 }
 
-void THCudaTensor_norm(THCState *state, THCudaTensor* self, THCudaTensor* src, float value, long dimension)
+void THCudaTensor_norm(THCState *state, THCudaTensor* self, THCudaTensor* src, float value, int64 dimension)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self, src));
   if (value == 0.0f) {
@@ -474,18 +474,18 @@ void THCudaTensor_norm(THCState *state, THCudaTensor* self, THCudaTensor* src, f
   THCudaCheck(cudaGetLastError());
 }
 
-__global__ void THCudaTensor_kernel_renorm(float *data, const float value, const long size, const float maxnorm)
+__global__ void THCudaTensor_kernel_renorm(float *data, const float value, const int64 size, const float maxnorm)
 {
   __shared__ float buffer[32];
-  long tx = threadIdx.x;
-  long bx = blockIdx.x;
-  long step = blockDim.x;
+  int64 tx = threadIdx.x;
+  int64 bx = blockIdx.x;
+  int64 step = blockDim.x;
   float *row = data + size*bx;
 
   buffer[tx] = 0;
 
   // get norm of axis
-  for (long i=tx; i<size; i+=step)
+  for (int64 i=tx; i<size; i+=step)
   {
     buffer[tx] += pow(fabs(row[i]), value);
   }
@@ -503,20 +503,20 @@ __global__ void THCudaTensor_kernel_renorm(float *data, const float value, const
   {
     norm = maxnorm / (norm + 1e-7);
     // renormalize
-    for (long i=tx; i<size; i+=step)
+    for (int64 i=tx; i<size; i+=step)
     {
       row[i] *= norm;
     }
   }
 }
 
-void THCudaTensor_renorm(THCState *state, THCudaTensor* self, THCudaTensor* src, float value, long dimension, float maxnorm)
+void THCudaTensor_renorm(THCState *state, THCudaTensor* self, THCudaTensor* src, float value, int64 dimension, float maxnorm)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self, src));
   THCudaTensor *self_;
   THCudaTensor *src_ = THCudaTensor_newTranspose(state, src, dimension, 0);
   THCudaTensor *data = THCudaTensor_newClone(state, src_);
-  long size = THCudaTensor_nElement(state, data)/data->size[0];
+  int64 size = THCudaTensor_nElement(state, data)/data->size[0];
 
   THArgCheck(dimension >= 0 && dimension < THCudaTensor_nDimension(state, src), 3, "invalid dimension");
   THArgCheck(value > 0, 2, "non-positive-norm not supported");
@@ -554,7 +554,7 @@ float THCudaTensor_dist(THCState *state, THCudaTensor *self, THCudaTensor *src, 
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self, src));
   self = THCudaTensor_newContiguous(state, self);
-  long size = THCudaTensor_nElement(state, self);
+  int64 size = THCudaTensor_nElement(state, self);
   src = THCudaTensor_newContiguous(state, src);
   thrust::device_ptr<float> self_data(THCudaTensor_data(state, self));
   thrust::device_ptr<float> src_data(THCudaTensor_data(state, src));

@@ -96,21 +96,21 @@ void THCudaTensor_div(THCState* state, THCudaTensor *self_, THCudaTensor *src_, 
 
 template <int Upper>
 struct TensorTriOp {
-  TensorTriOp(float *start_, long stride0_, long stride1_, long k_)
+  TensorTriOp(float *start_, int64 stride0_, int64 stride1_, int64 k_)
     : start(start_), stride0(stride0_), stride1(stride1_), k(k_) {}
 
   __device__ __forceinline__ int mask(float *in) {
     ptrdiff_t n = in - start;
-    long row, col;
+    int64 row, col;
     if (stride0 > stride1)
     {
-      row = (long) (n / stride0);
-      col = (long) ((n % stride0) / stride1);
+      row = (int64) (n / stride0);
+      col = (int64) ((n % stride0) / stride1);
     }
     else
     {
-      row = (long) ((n % stride1) / stride0);
-      col = (long) (n / stride1);
+      row = (int64) ((n % stride1) / stride0);
+      col = (int64) (n / stride1);
     }
 
     return Upper ? (col - row >= k) : (col - row <= k);
@@ -126,10 +126,10 @@ struct TensorTriOp {
   }
 
   const float *start;
-  const long stride0, stride1, k;
+  const int64 stride0, stride1, k;
 };
 
-void THCudaTensor_tril(THCState *state, THCudaTensor *self_, THCudaTensor *src_, long k)
+void THCudaTensor_tril(THCState *state, THCudaTensor *self_, THCudaTensor *src_, int64 k)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self_, src_));
   THArgCheck(src_->nDimension == 2, 1, "expected a matrix");
@@ -138,8 +138,8 @@ void THCudaTensor_tril(THCState *state, THCudaTensor *self_, THCudaTensor *src_,
   if (self_ == src_)
     src = THCudaTensor_newContiguous(state, src_);
 
-  long stride0 = src->stride[0];
-  long stride1 = src->stride[1];
+  int64 stride0 = src->stride[0];
+  int64 stride1 = src->stride[1];
   float *start = THCudaTensor_data(state, src) + src->storageOffset;
 
   TensorTriOp<0> op(start, stride0, stride1, k);
@@ -162,7 +162,7 @@ void THCudaTensor_tril(THCState *state, THCudaTensor *self_, THCudaTensor *src_,
   THCudaCheck(cudaGetLastError());
 }
 
-void THCudaTensor_triu(THCState *state, THCudaTensor *self_, THCudaTensor *src_, long k)
+void THCudaTensor_triu(THCState *state, THCudaTensor *self_, THCudaTensor *src_, int64 k)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self_, src_));
   THArgCheck(src_->nDimension == 2, 1, "expected a matrix");
@@ -171,8 +171,8 @@ void THCudaTensor_triu(THCState *state, THCudaTensor *self_, THCudaTensor *src_,
   if (self_ == src_)
     src = THCudaTensor_newContiguous(state, src_);
 
-  long stride0 = src->stride[0];
-  long stride1 = src->stride[1];
+  int64 stride0 = src->stride[0];
+  int64 stride1 = src->stride[1];
   float *start = THCudaTensor_data(state, src) + src->storageOffset;
 
   TensorTriOp<1> op(start, stride0, stride1, k);

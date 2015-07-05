@@ -2,13 +2,13 @@
 #include "THCGeneral.h"
 #include "THAtomic.h"
 
-void THCudaStorage_set(THCState *state, THCudaStorage *self, long index, float value)
+void THCudaStorage_set(THCState *state, THCudaStorage *self, int64 index, float value)
 {
   THArgCheck((index >= 0) && (index < self->size), 2, "index out of bounds");
   THCudaCheck(cudaMemcpy(self->data + index, &value, sizeof(float), cudaMemcpyHostToDevice));
 }
 
-float THCudaStorage_get(THCState *state, const THCudaStorage *self, long index)
+float THCudaStorage_get(THCState *state, const THCudaStorage *self, int64 index)
 {
   float value;
   THArgCheck((index >= 0) && (index < self->size), 2, "index out of bounds");
@@ -26,7 +26,7 @@ THCudaStorage* THCudaStorage_new(THCState *state)
   return storage;
 }
 
-THCudaStorage* THCudaStorage_newWithSize(THCState *state, long size)
+THCudaStorage* THCudaStorage_newWithSize(THCState *state, int64 size)
 {
   THArgCheck(size >= 0, 2, "invalid size");
 
@@ -80,13 +80,13 @@ THCudaStorage* THCudaStorage_newWithSize4(THCState *state, float data0, float da
   return self;
 }
 
-THCudaStorage* THCudaStorage_newWithMapping(THCState *state, const char *fileName, long size, int isShared)
+THCudaStorage* THCudaStorage_newWithMapping(THCState *state, const char *fileName, int64 size, int isShared)
 {
   THError("not available yet for THCudaStorage");
   return NULL;
 }
 
-THCudaStorage* THCudaStorage_newWithData(THCState *state, float *data, long size)
+THCudaStorage* THCudaStorage_newWithData(THCState *state, float *data, int64 size)
 {
   THCudaStorage *storage = (THCudaStorage*)THAlloc(sizeof(THCudaStorage));
   storage->data = data;

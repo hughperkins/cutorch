@@ -12,7 +12,7 @@
 #include "THCReduceApplyUtils.cuh"
 
 // Size per each reduction block
-#define THC_REDUCE_ALL_BLOCK_SIZE 1024L
+#define THC_REDUCE_ALL_BLOCK_SIZE 1024LL
 
 // Cutoff size for two-pass reduction
 #define THC_TWO_PASS_REDUCTION_SIZE 2048L
@@ -107,15 +107,15 @@ THCudaTensor_reduceAllPass2(int numPass1Blocks,
 
 // Perform a two-pass reduction if the tensor is large enough to
 // warrant it.
-inline bool isTwoPassReductionSize(long elements) {
+inline bool isTwoPassReductionSize(int64 elements) {
   return (elements > THC_TWO_PASS_REDUCTION_SIZE);
 }
 
-inline long getTwoPassBlocks(THCState* state, long elements) {
-  long numBlocks = THCCeilDiv(elements, THC_REDUCE_ALL_BLOCK_SIZE);
+inline int64 getTwoPassBlocks(THCState* state, int64 elements) {
+  int64 numBlocks = THCCeilDiv(elements, THC_REDUCE_ALL_BLOCK_SIZE);
 
   // We can only have as many blocks as there is scratch space
-  long scratchSpace =
+  int64 scratchSpace =
     THCState_getCurrentDeviceScratchSpaceSize(state) / sizeof(float);
   THAssert(scratchSpace > 0);
 
@@ -127,20 +127,20 @@ inline long getTwoPassBlocks(THCState* state, long elements) {
 }
 
 // Get the block/grid size that we want
-inline void getPass1ReduceBlockGrid(THCState* state, long elements,
+inline void getPass1ReduceBlockGrid(THCState* state, int64 elements,
                                     dim3& grid, dim3& block) {
   grid = dim3(getTwoPassBlocks(state, elements));
   block = dim3(THC_REDUCE_ALL_BLOCK_SIZE);
 }
 
-inline void getPass2ReduceBlockGrid(THCState* state, long elements,
+inline void getPass2ReduceBlockGrid(THCState* state, int64 elements,
                                     dim3& grid, dim3& block) {
   grid = dim3(1);
   // We only need as many threads as there were blocks originally
   block = dim3(getTwoPassBlocks(state, elements));
 }
 
-inline void getSinglePassReduceBlockGrid(long elements,
+inline void getSinglePassReduceBlockGrid(int64 elements,
                                          dim3& grid, dim3& block) {
   grid = dim3(1);
   block = dim3(THC_REDUCE_ALL_BLOCK_SIZE);
@@ -149,7 +149,7 @@ inline void getSinglePassReduceBlockGrid(long elements,
 template <typename ModifyOp, typename ReduceOp, typename IndexType, int ADims>
 void callReduceAll(THCState* state,
                    const TensorInfo<IndexType>& in,
-                   long totalElements,
+                   int64 totalElements,
                    float init,
                    const ModifyOp& modifyOp,
                    const ReduceOp& reduceOp,
@@ -196,7 +196,7 @@ bool THCudaTensor_reduceAll(THCState* state,
                             float init,
                             float* out,
                             int outOnDevice) {
-  long inElements = THCudaTensor_nElement(state, in);
+  int64 inElements = THCudaTensor_nElement(state, in);
 
   if (THCudaTensor_nDimension(state, in) > MAX_CUTORCH_DIMS) {
     return false;
@@ -254,15 +254,15 @@ bool THCudaTensor_reduceAll(THCState* state,
 
     HANDLE_IN_CASE(unsigned int, inInfo.dims);
   } else {
-    TensorInfo<unsigned long long> inInfo(state, in);
+    TensorInfo<uint64> inInfo(state, in);
 
     // For large tensors, we only compile the completely contiguous
     // version and the completely generic version, to reduce
     // compilation time.
     if (inInfo.isContiguous()) {
-      HANDLE_IN_CASE(unsigned long long, -2);
+      HANDLE_IN_CASE(uint64, -2);
     } else {
-      HANDLE_IN_CASE(unsigned long long, -1);
+      HANDLE_IN_CASE(uint64, -1);
     }
   }
 #undef HANDLE_CASE

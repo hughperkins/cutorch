@@ -44,7 +44,7 @@ __global__ void THCudaTensor_kernel_transformReduceOuterDimIndex(float *tgt1, fl
 template<class BinaryFunction>
 __host__ void THCudaTensor_transformReduceOuterDimIndex(THCState *state, THCudaTensor *tgt1, THCudaTensor *tgt2,
                                                    THCudaTensor *src,
-                                                   long rdim, thrust::pair<float,float> init,
+                                                   int64 rdim, thrust::pair<float,float> init,
                                                    BinaryFunction binary_op)
 {
   unsigned ndim = THCudaTensor_nDimension(state, src);
@@ -73,13 +73,13 @@ __host__ void THCudaTensor_transformReduceOuterDimIndex(THCState *state, THCudaT
 
 /* Reduce the innermost dimension of a tensor (on thrust::pair functors which are (value, index))
  *
- * For an n-d tensor (n <= 4) where the reduction is along the innermost dimension:
+ * For an n-d tensor (n <= 4) where the reduction is aint64 the innermost dimension:
  *
  * - block.x is the innermost dimension, i.e. dimension 0;
  * - block.y and grid.y make up dimension 1; and
  * - grid.x and grid z are the remaining two outer dimensions (if any)
  *
- * Reduction along other dimensions is handled in a separate kernel.
+ * Reduction aint64 other dimensions is handled in a separate kernel.
  */
 template<class BinaryFunction>
 __global__ void THCudaTensor_kernel_transformReduceInnermostDimIndex(
@@ -152,7 +152,7 @@ __host__ void THCudaTensor_transformReduceInnermostDimIndex(
 
 template<class BinaryFunction>
 void THCudaTensor_reduceDimIndex(THCState *state, THCudaTensor *tgt1_, THCudaTensor *tgt2_, THCudaTensor *src,
-                             long dimension, thrust::pair<float,float> init,
+                             int64 dimension, thrust::pair<float,float> init,
                                      BinaryFunction binary_op)
 {
   THArgCheck(dimension >= 0 && dimension < THCudaTensor_nDimension(state, src), 3, "dimension out of range");
@@ -188,7 +188,7 @@ struct maxvalue_functor
   }
 };
 
-void THCudaTensor_max(THCState *state, THCudaTensor *values, THCudaTensor *indices, THCudaTensor *src, long dimension)
+void THCudaTensor_max(THCState *state, THCudaTensor *values, THCudaTensor *indices, THCudaTensor *src, int64 dimension)
 {
   THAssert(THCudaTensor_checkGPU(state, 3, values, indices, src));
   const float minfloat32 = -3.402823466e+38f;
@@ -207,7 +207,7 @@ struct minvalue_functor
   }
 };
 
-void THCudaTensor_min(THCState *state, THCudaTensor *values, THCudaTensor *indices, THCudaTensor *src, long dimension)
+void THCudaTensor_min(THCState *state, THCudaTensor *values, THCudaTensor *indices, THCudaTensor *src, int64 dimension)
 {
   THAssert(THCudaTensor_checkGPU(state, 3, values, indices, src));
   const float maxfloat32 = 3.402823466e+38f;

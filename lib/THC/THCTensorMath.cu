@@ -65,7 +65,7 @@ void THCudaTensor_reshape(THCState *state, THCudaTensor *r_, THCudaTensor *t, TH
   THCudaTensor_copy(state, r_, t);
 }
 
-long THCudaTensor_numel(THCState *state, THCudaTensor *t)
+int64 THCudaTensor_numel(THCState *state, THCudaTensor *t)
 {
   return THCudaTensor_nElement(state, t);
 }
@@ -259,7 +259,7 @@ float THCudaTensor_prodall(THCState *state, THCudaTensor *self)
   return val;
 }
 
-void THCudaTensor_sum(THCState* state, THCudaTensor *self, THCudaTensor *src, long dimension)
+void THCudaTensor_sum(THCState* state, THCudaTensor *self, THCudaTensor *src, int64 dimension)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self, src));
   if (!THCudaTensor_reduceDim(
@@ -271,7 +271,7 @@ void THCudaTensor_sum(THCState* state, THCudaTensor *self, THCudaTensor *src, lo
   THCudaCheck(cudaGetLastError());
 }
 
-void THCudaTensor_prod(THCState* state, THCudaTensor *self, THCudaTensor *src, long dimension)
+void THCudaTensor_prod(THCState* state, THCudaTensor *self, THCudaTensor *src, int64 dimension)
 {
   THAssert(THCudaTensor_checkGPU(state, 2, self, src));
   if (!THCudaTensor_reduceDim(

@@ -9,7 +9,7 @@ THCudaStorage *THCudaTensor_storage(THCState *state, const THCudaTensor *self)
   return self->storage;
 }
 
-long THCudaTensor_storageOffset(THCState *state, const THCudaTensor *self)
+int64 THCudaTensor_storageOffset(THCState *state, const THCudaTensor *self)
 {
   return self->storageOffset;
 }
@@ -19,13 +19,13 @@ int THCudaTensor_nDimension(THCState *state, const THCudaTensor *self)
   return self->nDimension;
 }
 
-long THCudaTensor_size(THCState *state, const THCudaTensor *self, int dim)
+int64 THCudaTensor_size(THCState *state, const THCudaTensor *self, int dim)
 {
   THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "out of range");
   return self->size[dim];
 }
 
-long THCudaTensor_stride(THCState *state, const THCudaTensor *self, int dim)
+int64 THCudaTensor_stride(THCState *state, const THCudaTensor *self, int dim)
 {
   THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "out of range");
   return self->stride[dim];
@@ -66,7 +66,7 @@ void THCudaTensor_clearFlag(THCState *state, THCudaTensor *self, const char flag
 /**** creation methods ****/
 
 static void THCudaTensor_rawInit(THCState *state, THCudaTensor *self);
-static void THCudaTensor_rawSet(THCState *state, THCudaTensor *self, THCudaStorage *storage, long storageOffset, int nDimension, long *size, long *stride);
+static void THCudaTensor_rawSet(THCState *state, THCudaTensor *self, THCudaStorage *storage, int64 storageOffset, int nDimension, int64 *size, int64 *stride);
 
 
 /* Empty init */
@@ -93,7 +93,7 @@ THCudaTensor *THCudaTensor_newWithTensor(THCState *state, THCudaTensor *tensor)
 }
 
 /* Storage init */
-THCudaTensor *THCudaTensor_newWithStorage(THCState *state, THCudaStorage *storage, long storageOffset, THLongStorage *size, THLongStorage *stride)
+THCudaTensor *THCudaTensor_newWithStorage(THCState *state, THCudaStorage *storage, int64 storageOffset, THLongStorage *size, THLongStorage *stride)
 {
   THCudaTensor *self = (THCudaTensor*)THAlloc(sizeof(THCudaTensor));
   if(size && stride)
@@ -110,35 +110,35 @@ THCudaTensor *THCudaTensor_newWithStorage(THCState *state, THCudaStorage *storag
 
   return self;
 }
-THCudaTensor *THCudaTensor_newWithStorage1d(THCState *state, THCudaStorage *storage, long storageOffset,
-                               long size0, long stride0)
+THCudaTensor *THCudaTensor_newWithStorage1d(THCState *state, THCudaStorage *storage, int64 storageOffset,
+                               int64 size0, int64 stride0)
 {
   return THCudaTensor_newWithStorage4d(state, storage, storageOffset, size0, stride0, -1, -1,  -1, -1,  -1, -1);
 }
 
-THCudaTensor *THCudaTensor_newWithStorage2d(THCState *state, THCudaStorage *storage, long storageOffset,
-                               long size0, long stride0,
-                               long size1, long stride1)
+THCudaTensor *THCudaTensor_newWithStorage2d(THCState *state, THCudaStorage *storage, int64 storageOffset,
+                               int64 size0, int64 stride0,
+                               int64 size1, int64 stride1)
 {
   return THCudaTensor_newWithStorage4d(state, storage, storageOffset, size0, stride0, size1, stride1,  -1, -1,  -1, -1);
 }
 
-THCudaTensor *THCudaTensor_newWithStorage3d(THCState *state, THCudaStorage *storage, long storageOffset,
-                               long size0, long stride0,
-                               long size1, long stride1,
-                               long size2, long stride2)
+THCudaTensor *THCudaTensor_newWithStorage3d(THCState *state, THCudaStorage *storage, int64 storageOffset,
+                               int64 size0, int64 stride0,
+                               int64 size1, int64 stride1,
+                               int64 size2, int64 stride2)
 {
   return THCudaTensor_newWithStorage4d(state, storage, storageOffset, size0, stride0, size1, stride1,  size2, stride2,  -1, -1);
 }
 
-THCudaTensor *THCudaTensor_newWithStorage4d(THCState *state, THCudaStorage *storage, long storageOffset,
-                               long size0, long stride0,
-                               long size1, long stride1,
-                               long size2, long stride2,
-                               long size3, long stride3)
+THCudaTensor *THCudaTensor_newWithStorage4d(THCState *state, THCudaStorage *storage, int64 storageOffset,
+                               int64 size0, int64 stride0,
+                               int64 size1, int64 stride1,
+                               int64 size2, int64 stride2,
+                               int64 size3, int64 stride3)
 {
-  long size[4] = {size0, size1, size2, size3};
-  long stride[4] = {stride0, stride1, stride2, stride3};
+  int64 size[4] = {size0, size1, size2, size3};
+  int64 stride[4] = {stride0, stride1, stride2, stride3};
 
   THCudaTensor *self = (THCudaTensor*)THAlloc(sizeof(THCudaTensor));
   THCudaTensor_rawInit(state, self);
@@ -152,24 +152,24 @@ THCudaTensor *THCudaTensor_newWithSize(THCState *state, THLongStorage *size, THL
   return THCudaTensor_newWithStorage(state, NULL, 0, size, stride);
 }
 
-THCudaTensor *THCudaTensor_newWithSize1d(THCState *state, long size0)
+THCudaTensor *THCudaTensor_newWithSize1d(THCState *state, int64 size0)
 {
   return THCudaTensor_newWithSize4d(state, size0, -1, -1, -1);
 }
 
-THCudaTensor *THCudaTensor_newWithSize2d(THCState *state, long size0, long size1)
+THCudaTensor *THCudaTensor_newWithSize2d(THCState *state, int64 size0, int64 size1)
 {
   return THCudaTensor_newWithSize4d(state, size0, size1, -1, -1);
 }
 
-THCudaTensor *THCudaTensor_newWithSize3d(THCState *state, long size0, long size1, long size2)
+THCudaTensor *THCudaTensor_newWithSize3d(THCState *state, int64 size0, int64 size1, int64 size2)
 {
   return THCudaTensor_newWithSize4d(state, size0, size1, size2, -1);
 }
 
-THCudaTensor *THCudaTensor_newWithSize4d(THCState *state, long size0, long size1, long size2, long size3)
+THCudaTensor *THCudaTensor_newWithSize4d(THCState *state, int64 size0, int64 size1, int64 size2, int64 size3)
 {
-  long size[4] = {size0, size1, size2, size3};
+  int64 size[4] = {size0, size1, size2, size3};
 
   THCudaTensor *self = (THCudaTensor*)THAlloc(sizeof(THCudaTensor));
   THCudaTensor_rawInit(state, self);
@@ -197,14 +197,14 @@ THCudaTensor *THCudaTensor_newContiguous(THCState *state, THCudaTensor *self)
   }
 }
 
-THCudaTensor *THCudaTensor_newSelect(THCState *state, THCudaTensor *tensor, int dimension_, long sliceIndex_)
+THCudaTensor *THCudaTensor_newSelect(THCState *state, THCudaTensor *tensor, int dimension_, int64 sliceIndex_)
 {
   THCudaTensor *self = THCudaTensor_newWithTensor(state, tensor);
   THCudaTensor_select(state, self, NULL, dimension_, sliceIndex_);
   return self;
 }
 
-THCudaTensor *THCudaTensor_newNarrow(THCState *state, THCudaTensor *tensor, int dimension_, long firstIndex_, long size_)
+THCudaTensor *THCudaTensor_newNarrow(THCState *state, THCudaTensor *tensor, int dimension_, int64 firstIndex_, int64 size_)
 {
   THCudaTensor *self = THCudaTensor_newWithTensor(state, tensor);
   THCudaTensor_narrow(state, self, NULL, dimension_, firstIndex_, size_);
@@ -218,7 +218,7 @@ THCudaTensor *THCudaTensor_newTranspose(THCState *state, THCudaTensor *tensor, i
   return self;
 }
 
-THCudaTensor *THCudaTensor_newUnfold(THCState *state, THCudaTensor *tensor, int dimension_, long size_, long step_)
+THCudaTensor *THCudaTensor_newUnfold(THCState *state, THCudaTensor *tensor, int dimension_, int64 size_, int64 step_)
 {
   THCudaTensor *self = THCudaTensor_newWithTensor(state, tensor);
   THCudaTensor_unfold(state, self, NULL, dimension_, size_, step_);
@@ -256,31 +256,31 @@ void THCudaTensor_resizeAs(THCState *state, THCudaTensor *self, THCudaTensor *sr
     THCudaTensor_rawResize(state, self, src->nDimension, src->size, NULL);
 }
 
-void THCudaTensor_resize1d(THCState *state, THCudaTensor *tensor, long size0)
+void THCudaTensor_resize1d(THCState *state, THCudaTensor *tensor, int64 size0)
 {
   THCudaTensor_resize4d(state, tensor, size0, -1, -1, -1);
 }
 
-void THCudaTensor_resize2d(THCState *state, THCudaTensor *tensor, long size0, long size1)
+void THCudaTensor_resize2d(THCState *state, THCudaTensor *tensor, int64 size0, int64 size1)
 {
   THCudaTensor_resize4d(state, tensor, size0, size1, -1, -1);
 }
 
-void THCudaTensor_resize3d(THCState *state, THCudaTensor *tensor, long size0, long size1, long size2)
+void THCudaTensor_resize3d(THCState *state, THCudaTensor *tensor, int64 size0, int64 size1, int64 size2)
 {
   THCudaTensor_resize4d(state, tensor, size0, size1, size2, -1);
 }
 
-void THCudaTensor_resize4d(THCState *state, THCudaTensor *self, long size0, long size1, long size2, long size3)
+void THCudaTensor_resize4d(THCState *state, THCudaTensor *self, int64 size0, int64 size1, int64 size2, int64 size3)
 {
-  long size[4] = {size0, size1, size2, size3};
+  int64 size[4] = {size0, size1, size2, size3};
 
   THCudaTensor_rawResize(state, self, 4, size, NULL);
 }
 
-void THCudaTensor_resize5d(THCState *state, THCudaTensor *self, long size0, long size1, long size2, long size3, long size4)
+void THCudaTensor_resize5d(THCState *state, THCudaTensor *self, int64 size0, int64 size1, int64 size2, int64 size3, int64 size4)
 {
-    long size[5] = {size0, size1, size2, size3, size4};
+    int64 size[5] = {size0, size1, size2, size3, size4};
 
   THCudaTensor_rawResize(state, self, 5, size, NULL);
 }
@@ -297,7 +297,7 @@ void THCudaTensor_set(THCState *state, THCudaTensor *self, THCudaTensor *src)
                         src->stride);
 }
 
-void THCudaTensor_setStorage(THCState *state, THCudaTensor *self, THCudaStorage *storage_, long storageOffset_, THLongStorage *size_, THLongStorage *stride_)
+void THCudaTensor_setStorage(THCState *state, THCudaTensor *self, THCudaStorage *storage_, int64 storageOffset_, THLongStorage *size_, THLongStorage *stride_)
 {
   if(size_ && stride_)
     THArgCheck(size_->size == stride_->size, 5, "inconsistent size/stride sizes");
@@ -311,8 +311,8 @@ void THCudaTensor_setStorage(THCState *state, THCudaTensor *self, THCudaStorage 
                       (stride_ ? stride_->data : NULL));
 }
 
-void THCudaTensor_setStorage1d(THCState *state, THCudaTensor *self, THCudaStorage *storage_, long storageOffset_,
-                             long size0_, long stride0_)
+void THCudaTensor_setStorage1d(THCState *state, THCudaTensor *self, THCudaStorage *storage_, int64 storageOffset_,
+                             int64 size0_, int64 stride0_)
 {
   THCudaTensor_setStorage4d(state, self, storage_, storageOffset_,
                             size0_, stride0_,
@@ -321,9 +321,9 @@ void THCudaTensor_setStorage1d(THCState *state, THCudaTensor *self, THCudaStorag
                             -1, -1);
 }
 
-void THCudaTensor_setStorage2d(THCState *state, THCudaTensor *self, THCudaStorage *storage_, long storageOffset_,
-                             long size0_, long stride0_,
-                             long size1_, long stride1_)
+void THCudaTensor_setStorage2d(THCState *state, THCudaTensor *self, THCudaStorage *storage_, int64 storageOffset_,
+                             int64 size0_, int64 stride0_,
+                             int64 size1_, int64 stride1_)
 {
   THCudaTensor_setStorage4d(state, self, storage_, storageOffset_,
                             size0_, stride0_,
@@ -332,10 +332,10 @@ void THCudaTensor_setStorage2d(THCState *state, THCudaTensor *self, THCudaStorag
                             -1, -1);
 }
 
-void THCudaTensor_setStorage3d(THCState *state, THCudaTensor *self, THCudaStorage *storage_, long storageOffset_,
-                             long size0_, long stride0_,
-                             long size1_, long stride1_,
-                             long size2_, long stride2_)
+void THCudaTensor_setStorage3d(THCState *state, THCudaTensor *self, THCudaStorage *storage_, int64 storageOffset_,
+                             int64 size0_, int64 stride0_,
+                             int64 size1_, int64 stride1_,
+                             int64 size2_, int64 stride2_)
 {
   THCudaTensor_setStorage4d(state, self, storage_, storageOffset_,
                             size0_, stride0_,
@@ -344,21 +344,21 @@ void THCudaTensor_setStorage3d(THCState *state, THCudaTensor *self, THCudaStorag
                             -1, -1);
 }
 
-void THCudaTensor_setStorage4d(THCState *state, THCudaTensor *self, THCudaStorage *storage_, long storageOffset_,
-                             long size0_, long stride0_,
-                             long size1_, long stride1_,
-                             long size2_, long stride2_,
-                             long size3_, long stride3_)
+void THCudaTensor_setStorage4d(THCState *state, THCudaTensor *self, THCudaStorage *storage_, int64 storageOffset_,
+                             int64 size0_, int64 stride0_,
+                             int64 size1_, int64 stride1_,
+                             int64 size2_, int64 stride2_,
+                             int64 size3_, int64 stride3_)
 {
 
-  long size[4] = {size0_, size1_, size2_, size3_};
-  long stride[4] = {stride0_, stride1_, stride2_, stride3_};
+  int64 size[4] = {size0_, size1_, size2_, size3_};
+  int64 stride[4] = {stride0_, stride1_, stride2_, stride3_};
 
   THCudaTensor_rawSet(state, self, storage_, storageOffset_, 4, size, stride);
 }
 
 
-void THCudaTensor_narrow(THCState *state, THCudaTensor *self, THCudaTensor *src, int dimension, long firstIndex, long size)
+void THCudaTensor_narrow(THCState *state, THCudaTensor *self, THCudaTensor *src, int dimension, int64 firstIndex, int64 size)
 {
   if(!src)
     src = self;
@@ -375,7 +375,7 @@ void THCudaTensor_narrow(THCState *state, THCudaTensor *self, THCudaTensor *src,
   self->size[dimension] = size;
 }
 
-void THCudaTensor_select(THCState *state, THCudaTensor *self, THCudaTensor *src, int dimension, long sliceIndex)
+void THCudaTensor_select(THCState *state, THCudaTensor *self, THCudaTensor *src, int dimension, int64 sliceIndex)
 {
   int d;
 
@@ -398,7 +398,7 @@ void THCudaTensor_select(THCState *state, THCudaTensor *self, THCudaTensor *src,
 
 void THCudaTensor_transpose(THCState *state, THCudaTensor *self, THCudaTensor *src, int dimension1, int dimension2)
 {
-  long z;
+  int64 z;
 
   if(!src)
     src = self;
@@ -419,10 +419,10 @@ void THCudaTensor_transpose(THCState *state, THCudaTensor *self, THCudaTensor *s
   self->size[dimension2] = z;
 }
 
-void THCudaTensor_unfold(THCState *state, THCudaTensor *self, THCudaTensor *src, int dimension, long size, long step)
+void THCudaTensor_unfold(THCState *state, THCudaTensor *self, THCudaTensor *src, int dimension, int64 size, int64 step)
 {
-  long *newSize;
-  long *newStride;
+  int64 *newSize;
+  int64 *newStride;
   int d;
 
   if(!src)
@@ -435,8 +435,8 @@ void THCudaTensor_unfold(THCState *state, THCudaTensor *self, THCudaTensor *src,
 
   THCudaTensor_set(state, self, src);
 
-  newSize = (long*)THAlloc(sizeof(long)*(self->nDimension+1));
-  newStride = (long*)THAlloc(sizeof(long)*(self->nDimension+1));
+  newSize = (int64*)THAlloc(sizeof(int64)*(self->nDimension+1));
+  newStride = (int64*)THAlloc(sizeof(int64)*(self->nDimension+1));
 
   newSize[self->nDimension] = size;
   newStride[self->nDimension] = self->stride[dimension];
@@ -520,7 +520,7 @@ void THCudaTensor_squeeze1d(THCState *state, THCudaTensor *self, THCudaTensor *s
 
 int THCudaTensor_isContiguous(THCState *state, const THCudaTensor *self)
 {
-  long z = 1;
+  int64 z = 1;
   int d;
   for(d = self->nDimension-1; d >= 0; d--)
   {
@@ -548,13 +548,13 @@ int THCudaTensor_isSameSizeAs(THCState *state, const THCudaTensor *self, const T
   return 1;
 }
 
-long THCudaTensor_nElement(THCState *state, const THCudaTensor *self)
+int64 THCudaTensor_nElement(THCState *state, const THCudaTensor *self)
 {
   if(self->nDimension == 0)
     return 0;
   else
   {
-    long nElement = 1;
+    int64 nElement = 1;
     int d;
     for(d = 0; d < self->nDimension; d++)
       nElement *= self->size[d];
@@ -607,7 +607,7 @@ static void THCudaTensor_rawInit(THCState *state, THCudaTensor *self)
   self->flag = TH_TENSOR_REFCOUNTED;
 }
 
-static void THCudaTensor_rawSet(THCState *state, THCudaTensor *self, THCudaStorage *storage, long storageOffset, int nDimension, long *size, long *stride)
+static void THCudaTensor_rawSet(THCState *state, THCudaTensor *self, THCudaStorage *storage, int64 storageOffset, int nDimension, int64 *size, int64 *stride)
 {
   /* storage */
   if(self->storage != storage)
@@ -633,11 +633,11 @@ static void THCudaTensor_rawSet(THCState *state, THCudaTensor *self, THCudaStora
   THCudaTensor_rawResize(state, self, nDimension, size, stride);
 }
 
-void THCudaTensor_rawResize(THCState *state, THCudaTensor *self, int nDimension, long *size, long *stride)
+void THCudaTensor_rawResize(THCState *state, THCudaTensor *self, int nDimension, int64 *size, int64 *stride)
 {
   int d;
   int nDimension_;
-  long totalSize;
+  int64 totalSize;
   int hascorrectsize = 1;
 
   nDimension_ = 0;
@@ -667,8 +667,8 @@ void THCudaTensor_rawResize(THCState *state, THCudaTensor *self, int nDimension,
   {
     if(nDimension != self->nDimension)
     {
-      self->size = (long*)THRealloc(self->size, sizeof(long)*nDimension);
-      self->stride = (long*)THRealloc(self->stride, sizeof(long)*nDimension);
+      self->size = (int64*)THRealloc(self->size, sizeof(int64)*nDimension);
+      self->stride = (int64*)THRealloc(self->stride, sizeof(int64)*nDimension);
       self->nDimension = nDimension;
     }
 
@@ -700,56 +700,56 @@ void THCudaTensor_rawResize(THCState *state, THCudaTensor *self, int nDimension,
     self->nDimension = 0;
 }
 
-void THCudaTensor_set1d(THCState *state, THCudaTensor *tensor, long x0, float value)
+void THCudaTensor_set1d(THCState *state, THCudaTensor *tensor, int64 x0, float value)
 {
   THArgCheck(tensor->nDimension == 1, 1, "tensor must have one dimension");
   THArgCheck( (x0 >= 0) && (x0 < tensor->size[0]), 2, "out of range");
   THCudaStorage_set(state, tensor->storage, tensor->storageOffset+x0*tensor->stride[0], value);
 }
 
-float THCudaTensor_get1d(THCState *state, const THCudaTensor *tensor, long x0)
+float THCudaTensor_get1d(THCState *state, const THCudaTensor *tensor, int64 x0)
 {
   THArgCheck(tensor->nDimension == 1, 1, "tensor must have one dimension");
   THArgCheck( (x0 >= 0) && (x0 < tensor->size[0]), 2, "out of range");
   return THCudaStorage_get(state, tensor->storage, tensor->storageOffset+x0*tensor->stride[0]);
 }
 
-void THCudaTensor_set2d(THCState *state, THCudaTensor *tensor, long x0, long x1, float value)
+void THCudaTensor_set2d(THCState *state, THCudaTensor *tensor, int64 x0, int64 x1, float value)
 {
   THArgCheck(tensor->nDimension == 2, 1, "tensor must have two dimensions");
   THArgCheck((x0 >= 0) && (x0 < tensor->size[0]) && (x1 >= 0) && (x1 < tensor->size[1]), 2, "out of range");
   THCudaStorage_set(state, tensor->storage, tensor->storageOffset+x0*tensor->stride[0]+x1*tensor->stride[1], value);
 }
 
-float THCudaTensor_get2d(THCState *state, const THCudaTensor *tensor, long x0, long x1)
+float THCudaTensor_get2d(THCState *state, const THCudaTensor *tensor, int64 x0, int64 x1)
 {
   THArgCheck(tensor->nDimension == 2, 1, "tensor must have two dimensions");
   THArgCheck((x0 >= 0) && (x0 < tensor->size[0]) && (x1 >= 0) && (x1 < tensor->size[1]), 2, "out of range");
   return THCudaStorage_get(state, tensor->storage, tensor->storageOffset+x0*tensor->stride[0]+x1*tensor->stride[1]);
 }
 
-void THCudaTensor_set3d(THCState *state, THCudaTensor *tensor, long x0, long x1, long x2, float value)
+void THCudaTensor_set3d(THCState *state, THCudaTensor *tensor, int64 x0, int64 x1, int64 x2, float value)
 {
   THArgCheck(tensor->nDimension == 3, 1, "tensor must have three dimensions");
   THArgCheck( (x0 >= 0) && (x0 < tensor->size[0]) && (x1 >= 0) && (x1 < tensor->size[1]) && (x2 >= 0) && (x2 < tensor->size[2]), 2, "out of range");
   THCudaStorage_set(state, tensor->storage, tensor->storageOffset+x0*tensor->stride[0]+x1*tensor->stride[1]+x2*tensor->stride[2], value);
 }
 
-float THCudaTensor_get3d(THCState *state, const THCudaTensor *tensor, long x0, long x1, long x2)
+float THCudaTensor_get3d(THCState *state, const THCudaTensor *tensor, int64 x0, int64 x1, int64 x2)
 {
   THArgCheck(tensor->nDimension == 3, 1, "tensor must have three dimensions");
   THArgCheck( (x0 >= 0) && (x0 < tensor->size[0]) && (x1 >= 0) && (x1 < tensor->size[1]) && (x2 >= 0) && (x2 < tensor->size[2]), 2, "out of range");
   return THCudaStorage_get(state, tensor->storage, tensor->storageOffset+x0*tensor->stride[0]+x1*tensor->stride[1]+x2*tensor->stride[2]);
 }
 
-void THCudaTensor_set4d(THCState *state, THCudaTensor *tensor, long x0, long x1, long x2, long x3, float value)
+void THCudaTensor_set4d(THCState *state, THCudaTensor *tensor, int64 x0, int64 x1, int64 x2, int64 x3, float value)
 {
   THArgCheck(tensor->nDimension == 4, 1, "tensor must have four dimensions");
   THArgCheck((x0 >= 0) && (x0 < tensor->size[0]) && (x1 >= 0) && (x1 < tensor->size[1]) && (x2 >= 0) && (x2 < tensor->size[2]) && (x3 >= 0) && (x3 < tensor->size[3]), 2, "out of range");
   THCudaStorage_set(state, tensor->storage, tensor->storageOffset+x0*tensor->stride[0]+x1*tensor->stride[1]+x2*tensor->stride[2]+x3*tensor->stride[3], value);
 }
 
-float THCudaTensor_get4d(THCState *state, const THCudaTensor *tensor, long x0, long x1, long x2, long x3)
+float THCudaTensor_get4d(THCState *state, const THCudaTensor *tensor, int64 x0, int64 x1, int64 x2, int64 x3)
 {
   THArgCheck(tensor->nDimension == 4, 1, "tensor must have four dimensions");
   THArgCheck((x0 >= 0) && (x0 < tensor->size[0]) && (x1 >= 0) && (x1 < tensor->size[1]) && (x2 >= 0) && (x2 < tensor->size[2]) && (x3 >= 0) && (x3 < tensor->size[3]), 2, "out of range");
