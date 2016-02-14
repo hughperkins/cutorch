@@ -1,6 +1,8 @@
 #ifndef THC_APPLY_INC
 #define THC_APPLY_INC
 
+#include <iostream>
+
 #include "THCTensorCopy.h"
 #include "THCReduceApplyUtils.cuh"
 
@@ -165,6 +167,7 @@ bool THCudaTensor_pointwiseApply1(THCState* state,
   // dimension, and the loop to translate the linear index to the array
   // index can be similarly collapsed. That is what this unrolling is for.
 #define HANDLE_CASE(TYPE, A)                                   \
+  std::cout << "apply1 A=" << A << std::endl; \
   THCudaTensor_pointwiseApply1<Op, TYPE, A>                    \
     <<<grid, block, 0, THCState_getCurrentStream(state)>>>(    \
       aInfo, (TYPE) totalElements, op);
@@ -294,6 +297,7 @@ bool THCudaTensor_pointwiseApply2(THCState* state,
   // dimension, and the loop to translate the linear index to the array
   // index can be similarly collapsed. That is what this unrolling is for.
 #define HANDLE_CASE(TYPE, A, B)                                \
+  std::cout << "apply2 A=" << A << " B=" << B << std::endl; \
   THCudaTensor_pointwiseApply2<Op, TYPE, A, B>                 \
     <<<grid, block, 0, THCState_getCurrentStream(state)>>>(    \
       aInfo, bInfo, (TYPE) totalElements, op);
@@ -462,6 +466,7 @@ bool THCudaTensor_pointwiseApply3(THCState* state,
   }
 
 #define HANDLE_CASE(TYPE, A, B, C)                                      \
+  std::cout << "apply3 A=" << A << " B=" << B << " C=" << C << std::endl; \
   THCudaTensor_pointwiseApply3<Op, TYPE, A, B, C>                       \
     <<<grid, block, 0, THCState_getCurrentStream(state)>>>(             \
       aInfo, bInfo, cInfo, (TYPE) totalElements, op);
