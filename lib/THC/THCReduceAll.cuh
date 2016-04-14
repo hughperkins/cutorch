@@ -232,20 +232,7 @@ bool THCudaTensor_reduceAll(THCState* state,
     if (inInfo.isContiguous()) {                    \
       HANDLE_CASE(TYPE, -2);                        \
     } else {                                        \
-      switch (IN) {                                 \
-        case 1:                                     \
-          HANDLE_CASE(TYPE, 1);                     \
-          break;                                    \
-        case 2:                                     \
-          HANDLE_CASE(TYPE, 2);                     \
-          break;                                    \
-        case 3:                                     \
-          HANDLE_CASE(TYPE, 3);                     \
-          break;                                    \
-        default:                                    \
-          HANDLE_CASE(TYPE, -1);                    \
-          break;                                    \
-      }                                             \
+      HANDLE_CASE(TYPE, -1);                    \
     }                                               \
   }
 

@@ -226,20 +226,7 @@ bool THCudaTensor_reduceDim(THCState* state,
     if (inInfo.isContiguous()) {                        \
       HANDLE_CASE(TYPE, OUT, -2);                       \
     } else {                                            \
-      switch (IN) {                                     \
-        case 1:                                         \
-          HANDLE_CASE(TYPE, OUT, 1);                    \
-          break;                                        \
-        case 2:                                         \
-          HANDLE_CASE(TYPE, OUT, 2);                    \
-          break;                                        \
-        case 3:                                         \
-          HANDLE_CASE(TYPE, OUT, 3);                    \
-          break;                                        \
-        default:                                        \
-          HANDLE_CASE(TYPE, OUT, -1);                   \
-          break;                                        \
-      }                                                 \
+      HANDLE_CASE(TYPE, OUT, -1);                   \
     }                                                   \
   }
 
@@ -248,20 +235,7 @@ bool THCudaTensor_reduceDim(THCState* state,
     if (outInfo.isContiguous()) {                     \
       HANDLE_IN_CASE(TYPE, -2, IN);                   \
     } else {                                          \
-      switch (OUT) {                                  \
-        case 1:                                       \
-          HANDLE_IN_CASE(TYPE, 1, IN);                \
-          break;                                      \
-        case 2:                                       \
-          HANDLE_IN_CASE(TYPE, 2, IN);                \
-          break;                                      \
-        case 3:                                       \
-          HANDLE_IN_CASE(TYPE, 3, IN);                \
-          break;                                      \
-        default:                                      \
-          HANDLE_IN_CASE(TYPE, -1, IN);               \
-          break;                                      \
-      }                                               \
+      HANDLE_IN_CASE(TYPE, -1, IN);               \
     }                                                 \
   }
 
